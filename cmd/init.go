@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/charmbracelet/log"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -13,10 +16,23 @@ import (
 	"github.com/rs/cors"
 )
 
+var Sess *session.Session
+
 func initConfig(app *App) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Error(err)
+	}
+	Sess, err = session.NewSession(&aws.Config{
+		Region: aws.String(os.Getenv("AWS_S3_BUCKET_REGION")),
+		Credentials: credentials.NewStaticCredentials(
+			os.Getenv("AWS_KEY"),
+			os.Getenv("AWS_SECRET"),
+			"",
+		),
+	})
+	if err != nil {
+		log.Error("Error creating AWS session: ", err)
 	}
 
 }

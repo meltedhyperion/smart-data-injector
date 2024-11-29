@@ -3,6 +3,7 @@ module github.com/meltedhyperion/smart-data-injector
 go 1.22.5
 
 require (
+	github.com/aws/aws-sdk-go v1.55.5 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/lipgloss v1.0.0 // indirect
 	github.com/charmbracelet/log v0.4.0 // indirect
@@ -10,6 +11,7 @@ require (
 	github.com/go-chi/chi/v5 v5.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
