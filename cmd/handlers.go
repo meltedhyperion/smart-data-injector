@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-chi/chi/v5"
 	"github.com/meltedhyperion/smart-data-injector/util"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func initHandler(app *App, r *chi.Mux) {
@@ -57,7 +57,6 @@ func initHandler(app *App, r *chi.Mux) {
 			return
 		}
 		svc := s3.New(Sess)
-		fmt.Println(svc.ListBuckets(&s3.ListBucketsInput{}))
 		srcFile, err := handler.Open()
 		if err != nil {
 			sendErrorResponse(rw, http.StatusInternalServerError, err.Error(), "Error opening file")
@@ -81,9 +80,36 @@ func initHandler(app *App, r *chi.Mux) {
 		if err != nil {
 			sendErrorResponse(rw, http.StatusInternalServerError, err.Error(), "Error getting logs collection")
 		}
-		_, err = logsCollection.InsertOne(r.Context(), map[string]interface{}{
-			"file_name":   uploadFileName,
-			"uploaded_at": time.Now(),
+		insertID, err := logsCollection.InsertOne(r.Context(), map[string]interface{}{
+			"file_name": uploadFileName,
+			"file_upload": map[string]interface{}{
+				"status":    true,
+				"timestamp": time.Now(),
+			},
+			"s3_trigger_completed": map[string]interface{}{
+				"status":    false,
+				"timestamp": 0,
+			},
+			"parsed_to_json": map[string]interface{}{
+				"status":    false,
+				"timestamp": 0,
+			},
+			"source_schema_metadata": map[string]interface{}{
+				"status":    false,
+				"timestamp": 0,
+			},
+			"target_schema_metadata": map[string]interface{}{
+				"status":    false,
+				"timestamp": 0,
+			},
+			"association_mapping_generated": map[string]interface{}{
+				"status":    false,
+				"timestamp": 0,
+			},
+			"data_injection_completed": map[string]interface{}{
+				"status":    false,
+				"timestamp": 0,
+			},
 		})
 
 		if err != nil {
@@ -98,6 +124,11 @@ func initHandler(app *App, r *chi.Mux) {
 		}
 
 		url := "https://smart-data-injector.s3.ap-south-1.amazonaws.com/" + key
-		sendResponse(rw, 200, url, "File uploaded successfully with public read access.")
+		logId := insertID.InsertedID.(primitive.ObjectID).Hex()
+		data := map[string]interface{}{
+			"url":   url,
+			"logId": logId,
+		}
+		sendResponse(rw, 200, data, "File uploaded successfully with public read access.")
 	})
 }
