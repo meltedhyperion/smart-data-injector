@@ -41,7 +41,6 @@ func initServer(app *App) {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	// setup cors
 	r.Use(cors.New(cors.Options{
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "Authorization"},
