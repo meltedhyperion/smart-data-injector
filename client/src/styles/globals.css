@@ -1,0 +1,81 @@
+
+.login-box {
+
+  width: 400px;
+  padding: 40px;
+  border: 3px solid #2f2f2f;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dashboard{
+  justify-content: center;
+  align-items: center;
+}
+.login-box input {
+  width: 100%;
+  font-size: 18px;
+  margin-top: 10px;
+  border: none;
+  border-bottom: 1px solid #0e0d0d;
+  outline: none;
+  background: transparent;
+}
+
+.dashboard-box {
+  width: 400px;
+  padding: 40px;
+  border: 3px solid #2f2f2f;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px; 
+}
+ 
+button{
+  width: 270px;
+  height: 40px;
+  border: none;
+  outline: none;
+  background: #00b203;
+  color:#000000;
+  font-size: 19px;
+  border-radius: 35px;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: 600;
+  margin: 0 auto;
+}
+
+button:hover{
+  background: #00ab03;
+}
+
+label#text{
+  color: #0e0d0d;
+  font-size: 20px;
+}
+
+.formItems{
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.master{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f5f5f5;
+  gap: 20px;
+}
+
+.orderList{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 20px;
+}
