@@ -47,11 +47,14 @@ Golang installed on your system.
 <img width="781" alt="image" src="https://github.com/user-attachments/assets/d7b8d9c3-6d48-4c24-a4b5-3923af1ecaee">
 
 
+
 2) Use the API Key for data injection
 <img width="781" alt="image" src="https://github.com/user-attachments/assets/7ff1897f-d58d-4240-92af-a42192e59de8">
 
 
+
 3) Once completed, proceed to analytics dashboard:
-   <img width="484" alt="image" src="https://github.com/user-attachments/assets/00ddb053-31bb-4d80-b2f2-9ed9d995516c">
+
+ <img width="484" alt="image" src="https://github.com/user-attachments/assets/00ddb053-31bb-4d80-b2f2-9ed9d995516c">
 
 
