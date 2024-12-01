@@ -1,0 +1,332 @@
+id: smart-data-injector
+namespace: hackathon
+
+
+variables:
+  bucket: smart-data-injector
+  mongo_uri: "**************"
+  db_name: smart-data-injector
+  awsAccessKeyId: "**************"
+  awsSecretKeyId: "****************************"
+  region: ap-south-1
+  gemini_api: "**************"
+  
+
+
+tasks:
+  - id: get_filename
+    type: io.kestra.plugin.scripts.python.Script
+    script: |
+      import os
+      from kestra import Kestra
+
+      fileName = os.path.basename("{{ trigger.objects[0].key}}")
+      print(fileName)
+      outputs = {
+        'fileName': fileName
+      }
+      Kestra.outputs(outputs)
+
+  - id: s3_trigger
+    type: io.kestra.plugin.core.flow.Sequential
+    tasks:
+    - id: log_trigger
+      type: io.kestra.plugin.core.log.Log
+      message: "{{ trigger.objects[0].key}}"
+    - id: s3_trigger_mongo_log
+      type: io.kestra.plugin.mongodb.Update
+      connection:
+        uri: "{{vars.mongo_uri}}"
+      database: "{{vars.db_name}}"
+      collection: "logs"
+      filter:
+        file_name: "{{outputs.get_filename.vars.fileName}}"
+      document: |
+        {
+          "$set": {
+            "s3_trigger_completed": {
+              "status": true,
+              "timestamp": { "$date": "{{ now() }}" }
+            }
+          }
+        }
+
+  - id: data_to_json_parser
+    type: io.kestra.plugin.core.flow.Parallel
+    tasks:
+      - id: parsing_script
+        type: io.kestra.plugin.scripts.python.Script
+        script: |
+          import json
+          import os
+          from kestra import Kestra
+          file = "{{ trigger.objects[0].uri}}"
+
+          def parseData():
+            with open(file, "r") as f:
+              lines = f.readlines()
+              if lines[0][0] == "[" or lines[0][0] == "{":
+                data = parseJSON()
+                return data
+              else:
+                headers = lines[0].split(",")
+                data = []
+                for line in lines[1:]:
+                  data.append(dict(zip(headers, line.split(","))))
+                return data
+
+          def parseJSON():
+            with open(file, "r") as f:
+              return json.load(f)
+
+          data = parseData()
+
+          data = json.dumps(data, indent=4)
+          print(data)
+          outputs = {
+            'data': data
+          }
+          Kestra.outputs(outputs)
+          print("Successfully executed json parsing script!!")
+
+      - id: json_parser_mongo_log
+        type: io.kestra.plugin.mongodb.Update
+        connection:
+            uri: "{{vars.mongo_uri}}"
+        database: "{{vars.db_name}}"
+        collection: "logs"
+        filter:
+          file_name: "{{outputs.get_filename.vars.fileName}}"
+        document: |
+          {
+            "$set": {
+              "parsed_to_json": {
+                "status": true,
+                "timestamp": { "$date": "{{ now() }}" }
+              }
+            }
+          }
+
+  - id: source_schema_metadata
+    type: io.kestra.plugin.core.flow.Parallel
+    tasks: 
+      - id: execution_script_for_source_schema_metadata
+        type: io.kestra.plugin.scripts.python.Script
+        description: "Get metadata"
+        script: |
+          import json
+          from kestra import Kestra
+
+          def get_schema(data, prefix=""):
+            schema = {}
+
+            if isinstance(data, dict):
+              for key, value in data.items():
+                full_key = f"{prefix}.{key}" if prefix else key
+                if isinstance(value, (dict, list)):
+                  schema.update(get_schema(value, prefix=full_key))
+                else:
+                  schema[full_key] = type(value).__name__
+            elif isinstance(data, list) and len(data) > 0:
+              schema.update(get_schema(data[0], prefix=prefix))
+            else:
+              schema[prefix] = type(data).__name__
+
+            return schema
+
+          json_data = {{outputs.parsing_script.vars.data}}
+          schema = get_schema(json_data)
+          print(schema)
+          outputs = {
+          'schema_metadata': schema,
+          'schema_metadata_json_string': json.dumps(schema, indent=4)
+          }
+          Kestra.outputs(outputs)
+          print("Successfully executed script for schema metadata!!")
+      
+      - id: mongo_log_source_schema_metadata
+        type: io.kestra.plugin.mongodb.Update
+        connection:
+            uri: "{{vars.mongo_uri}}"
+        database: "{{vars.db_name}}"
+        collection: "logs"
+        filter:
+          file_name: "{{outputs.get_filename.vars.fileName}}"
+        document: |
+          {
+            "$set": {
+              "source_schema_metadata": {
+                "status": true,
+                "timestamp": { "$date": "{{ now() }}" }
+              }
+            }
+          }
+      
+  - id: log_to_mongodb
+    type: io.kestra.plugin.mongodb.InsertOne
+    connection:
+      uri: "{{vars.mongo_uri}}"
+    database: "{{vars.db_name}}"
+    collection: "schema_metadata"
+    document: "{{outputs.execution_script_for_source_schema_metadata.vars.schema_metadata | json}}"
+
+  - id: get_target_schema
+    type: io.kestra.plugin.core.flow.Parallel
+    tasks:
+      - id: execution_script_for_get_target_schema
+        type: io.kestra.plugin.mongodb.Find
+        connection:
+          uri: "{{vars.mongo_uri}}"
+        database: "{{vars.db_name}}"
+        collection: "inject_data_here"
+        filter: {}
+
+      - id: mongo_log_get_target_schema
+        type: io.kestra.plugin.mongodb.Update
+        connection:
+            uri: "{{vars.mongo_uri}}"
+        database: "{{vars.db_name}}"
+        collection: "logs"
+        filter:
+          file_name: "{{outputs.get_filename.vars.fileName}}"
+        document: |
+          {
+            "$set": {
+              "target_schema_metadata": {
+                "status": true,
+                "timestamp": { "$date": "{{ now() }}" }
+              }
+            }
+          }
+
+  - id: data_transformation_ai
+    type: io.kestra.plugin.scripts.python.Script
+    beforeCommands: 
+      - pip install -q -U google-generativeai
+    script: |
+      import google.generativeai as genai
+      from kestra import Kestra
+
+      genai.configure(api_key="{{vars.gemini_api}}")
+      
+      model = genai.GenerativeModel("gemini-1.5-flash")
+      response = model.generate_content("""
+      Keep it short and directly to the point. I have a source table schema and a target table schema. I need to develop association between the two table schemas for data injection. Can you provide me a association table? 
+
+      Source schema: 
+      {{outputs.execution_script_for_source_schema_metadata.vars.schema_metadata_json_string}}
+
+      Target schema: 
+      {{outputs.execution_script_for_get_target_schema.rows[0]}}
+
+      Give the output in the format: 
+      source_schema_field -> mapped target_schema_field.
+      For fields having no association, ignore. also end each association with a ';'
+      """)
+      
+      outputs = {
+        "association_map": response.text
+      }
+      Kestra.outputs(outputs)
+      print("Successfully Generated Association Mapping!!")
+
+  - id: log_data_transformation_ai
+    type: io.kestra.plugin.core.flow.Parallel
+    tasks:
+      - id: mongo_log_data_transformation_ai
+        type: io.kestra.plugin.mongodb.Update
+        connection:
+            uri: "{{vars.mongo_uri}}"
+        database: "{{vars.db_name}}"
+        collection: "logs"
+        filter:
+          file_name: "{{outputs.get_filename.vars.fileName}}"
+        document: |
+          {
+            "$set": {
+              "association_mapping_generated": {
+                "status": true,
+                "timestamp": { "$date": "{{ now() }}" }
+              }
+            }
+          }  
+
+      - id: log_association_map
+        type: io.kestra.plugin.core.log.Log
+        message: "{{outputs.data_transformation_ai.vars.association_map}}"
+      
+  - id: inject_data
+    type: io.kestra.plugin.scripts.python.Script
+    beforeCommands:
+      - pip install pymongo
+    script: |
+      import json
+      import pymongo
+
+      source_data = {{outputs.parsing_script.vars.data}}
+
+      field_association = """
+        {{outputs.data_transformation_ai.vars.association_map}}
+      """
+
+
+      def parse_field_association(association_str):
+        mapping = {}
+        pairs = association_str.split(";")
+        for pair in pairs:
+          if "->" in pair:
+            source, target = pair.split("->")
+            mapping[source.strip()] = target.strip()
+        return mapping
+
+
+      def transform_document(source_data, mapping):
+        transformed_data = {}
+        for source_field, target_field in mapping.items():
+          if source_field in source_data:
+            transformed_data[target_field] = source_data[source_field]
+        return transformed_data
+
+
+      client = pymongo.MongoClient(
+        "{{vars.mongo_uri}}"
+      )
+      db = client["{{vars.db_name}}"]
+      collection = db["inject_data_here"]
+      
+      field_mapping = parse_field_association(field_association)
+      transformed_data_list = [transform_document(doc, field_mapping) for doc in source_data]
+      collection.insert_many(transformed_data_list)
+
+      print("Successfully performed data injection!!")
+
+  - id: mongo_log_inject_data
+    type: io.kestra.plugin.mongodb.Update
+    connection:
+        uri: "{{vars.mongo_uri}}"
+    database: "{{vars.db_name}}"
+    collection: "logs"
+    filter:
+      file_name: "{{outputs.get_filename.vars.fileName}}"
+    document: |
+      {
+        "$set": {
+          "data_injection_completed": {
+            "status": true,
+            "timestamp": { "$date": "{{ now() }}" }
+          }
+        }
+      }  
+
+
+triggers:
+  - id: watch
+    type: io.kestra.plugin.aws.s3.Trigger
+    interval: "PT1S"
+    accessKeyId: "{{vars.awsAccessKeyId}}"
+    secretKeyId: "{{vars.awsSecretKeyId}}"
+    region: "{{vars.region}}"
+    bucket: "{{vars.bucket}}"
+    action: DELETE
+    filter: FILES
+    maxKeys: 1
