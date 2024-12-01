@@ -6,6 +6,10 @@ A Data Injection Pipeline tool that uses machine learning (LLM Model) for source
 
 ![image](https://github.com/user-attachments/assets/4c140a12-1bfa-430b-ac59-a1dcce17b36e)
 
+### One-shot 
+
+<img width="612" alt="image" src="https://github.com/user-attachments/assets/8c79d171-23d1-43a4-995c-46d197c57f4a">
+
 
 ### The workflow diagram
 
