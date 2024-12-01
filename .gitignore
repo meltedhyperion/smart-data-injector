@@ -2,3 +2,4 @@
 uploads/
 *.json
 test_data/
+*prod*
