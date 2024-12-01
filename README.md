@@ -62,3 +62,6 @@ Golang installed on your system.
  <img width="484" alt="image" src="https://github.com/user-attachments/assets/00ddb053-31bb-4d80-b2f2-9ed9d995516c">
 
 
+## Pipeline task execution log format
+
+<img width="669" alt="image" src="https://github.com/user-attachments/assets/3c3b9b5a-cb14-4c36-a324-5e2738b6055e">
