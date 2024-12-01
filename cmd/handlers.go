@@ -231,7 +231,11 @@ func initHandler(app *App, r *chi.Mux) {
 			sendErrorResponse(rw, http.StatusInternalServerError, err.Error(), "Error decoding target schema metadata")
 			return
 		}
-		random, _ := rand.Int(rand.Reader, big.NewInt(int64(len(sourceSchema)/10)))
+		randomGen := big.NewInt(int64(len(sourceSchema) / 10))
+		if randomGen.Int64() == 0 {
+			randomGen = big.NewInt(5)
+		}
+		random, _ := rand.Int(rand.Reader, randomGen)
 		associationCount := big.NewInt(int64(len(sourceSchema))).Sub(big.NewInt(int64(len(sourceSchema))), random).Int64()
 
 		sendResponse(rw, http.StatusOK, map[string]interface{}{
