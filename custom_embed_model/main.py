@@ -92,19 +92,6 @@ def main():
     # Set loss and optimizer
     criterion = get_loss()
     optimizer = optim.Adam(model.parameters(), lr=config["training"]["learning_rate"])
-    x = [0.9100, 0.51, 0.27, 0.08, 0.01, 0.0003, 0.0001, 0.0001, 0.0001, 0.0001]
-    y = [
-        0.8214,
-        0.8965,
-        0.9433,
-        0.9887,
-        0.9902,
-        0.9965,
-        0.9988,
-        1.0000,
-        1.0000,
-        1.0000,
-    ]
     # Train the model and record training metrics
     epoch_losses, epoch_accuracies = train_model(
         model,
