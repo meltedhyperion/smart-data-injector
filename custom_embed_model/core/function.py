@@ -59,4 +59,4 @@ def train_model(
 
     print("\nTraining completed.")
     time.sleep(20)
-    return epoch_losses, epoch_accuracies
+    return x, y

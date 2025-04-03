@@ -118,7 +118,7 @@ def main():
     )
 
     # Plot training loss and accuracy
-    plot_training_metrics(x, y)
+    plot_training_metrics(epoch_losses, epoch_accuracies)
     # plot_training_metrics(epoch_losses, epoch_accuracies)
 
     # Evaluate the model
