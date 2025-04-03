@@ -1,6 +1,7 @@
 import time
 import torch
 import random
+from config.globals import x, y
 
 
 def train_model(
@@ -9,8 +10,6 @@ def train_model(
     criterion,
     optimizer,
     device,
-    x,
-    y,
     num_epochs=10,
 ):
     """

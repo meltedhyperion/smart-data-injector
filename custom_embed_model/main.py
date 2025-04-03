@@ -112,8 +112,6 @@ def main():
         criterion,
         optimizer,
         device,
-        x,
-        y,
         num_epochs=config["training"]["num_epochs"],
     )
 
