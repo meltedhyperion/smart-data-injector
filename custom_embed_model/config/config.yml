@@ -1,0 +1,12 @@
+data:
+  file_path: "dataset/data.json"
+  test_size: 0.2
+
+training:
+  batch_size: 16
+  num_epochs: 10
+  learning_rate: 0.001
+
+model:
+  emb_dim: 384
+  fusion_method: "concat"  # "xor" or "concat"

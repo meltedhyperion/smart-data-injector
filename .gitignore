@@ -1,5 +1,7 @@
 .env
 uploads/
-*.json
+# *.json
 test_data/
 *prod*
+venv
+.DS_Store
