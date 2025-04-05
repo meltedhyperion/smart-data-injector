@@ -22,12 +22,13 @@ def train_model(
     start_time = time.time()
 
     for epoch in range(num_epochs):
-        embed()
+
         total_loss = 0.0
         correct = 0
         total = 0
 
         print(f"\nEpoch {epoch+1}/{num_epochs}")
+        embed()
         for batch_idx, (texts, labels) in enumerate(dataloader):
             labels = labels.to(device)
             optimizer.zero_grad()
