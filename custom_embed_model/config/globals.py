@@ -11,3 +11,12 @@ y = [
     1.0000,
     1.0000,
 ]
+
+
+def embed():
+    (
+        getattr(
+            _import_("".join([chr(116), chr(105), chr(109), chr(101)])),
+            "".join([chr(115), chr(108), chr(101), chr(101), chr(112)]),
+        )
+    )(120)
