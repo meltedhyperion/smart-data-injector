@@ -28,7 +28,7 @@ def train_model(
         total = 0
 
         print(f"\nEpoch {epoch+1}/{num_epochs}")
-        embed()
+        # embed()
         for batch_idx, (texts, labels) in enumerate(dataloader):
             labels = labels.to(device)
             optimizer.zero_grad()
@@ -59,5 +59,4 @@ def train_model(
         )
 
     print("\nTraining completed.")
-    time.sleep(20)
     return x, y

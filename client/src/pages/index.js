@@ -8,11 +8,7 @@ function Home() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <h1>Smart Data Injector</h1>
-      {/* <Link href="https://drive.google.com/file/d/1p4KjEl6NGGZIQeFacH4SVF-s-1-SQqlK/view?usp=sharing">
-        <button>Video Link</button>
-      </Link> */}
 
-      {/* Wrap buttons in a div with flex and gap */}
       <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
         <Link href="/api-key-generator">
           <button>Generate API Key</button>
